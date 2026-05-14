@@ -1,35 +1,61 @@
-# k8s-multi-service-deploy
-Multi-service Kubernetes deployment with persistent storage, ingress routing, and observability
-# k8s-multi-service-deploy
-
-## Problem statement
-A multi-service application deployed on Kubernetes, demonstrating service-to-service communication, persistent storage, ingress routing, and basic observability. Built as a hands-on study of operational Kubernetes patterns.
-
-## What the design demonstrates
-(To be filled as the project develops. Intended coverage: Deployment and Service primitives, ConfigMaps and Secrets, PersistentVolumeClaims, Ingress with path-based routing, Prometheus metrics scraping.)
-
-## Tech choices
-- **Cluster:** minikube (local single-node) — sufficient for learning and demos, swappable for kind or a real cluster.
-- **Languages:** TBD per service. Likely Go for one service, Python for another, to demonstrate polyglot service-to-service patterns.
-- **Observability:** Prometheus for metrics, kubectl logs for now (revisit Loki later if useful).
-
 ## How to run locally
+
+### Prerequisites
+- Docker (or another container runtime)
+- kubectl
+- minikube
+- Python 3.12+ (for host-side development outside containers)
+
+Versions tested against:
 ```bash
-minikube start
-kubectl apply -f manifests/
-minikube service <service-name> --url
+docker --version
+kubectl version --client
+minikube version
+python3 --version
 ```
 
+### Run a single service with Docker (development loop)
 
-### Start the cluster
+Useful for fast iteration on one service without spinning up the cluster. No persistence, in-memory storage only.
+
+Build the api-service image:
+```bash
+cd services/api
+docker build -t url-shortener-api:0.1 .
+```
+
+Run it:
+```bash
+docker run --rm -p 8000:8000 url-shortener-api:0.1
+```
+
+Test from another terminal:
+```bash
+# Health check
+curl http://localhost:8000/healthz
+
+# Create a short link
+curl -X POST http://localhost:8000/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+
+# Resolve a short link (use the code returned above)
+curl http://localhost:8000/<code>
+```
+
+Stop with Ctrl+C. The `--rm` flag in `docker run` removes the container automatically on stop.
+
+### Run the full stack on Kubernetes (deployment target)
+
+Bring up the cluster:
 ```bash
 minikube start
 kubectl get nodes
 ```
 Expected: one node, status `Ready`.
 
-### Smoke test (verify cluster is healthy before deploying app)
-Confirms that the cluster can schedule pods, expose services, and route traffic. Run this whenever something feels broken.
+#### Cluster smoke test (verify cluster health before deploying app)
+Run this whenever something feels broken — confirms scheduling, services, and traffic routing work.
 
 ```bash
 kubectl create deployment hello-test --image=kicbase/echo-server:1.0
@@ -38,7 +64,7 @@ kubectl wait --for=condition=available --timeout=60s deployment/hello-test
 minikube service hello-test --url
 ```
 
-Hit the returned URL with `curl` — you should get an echo response showing request headers.
+Hit the returned URL with `curl` — you should get an echo response.
 
 Clean up:
 ```bash
@@ -46,12 +72,9 @@ kubectl delete deployment hello-test
 kubectl delete service hello-test
 ```
 
-### Deploy the application
+#### Deploy the application
 (Manifests will be added as the project develops.)
 
 ```bash
 kubectl apply -f manifests/
 ```
-
-## What was non-obvious during the build
-(Engineering journal entries. To be filled as decisions get made and bugs get debugged.)

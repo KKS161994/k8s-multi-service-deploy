@@ -76,5 +76,42 @@ kubectl delete service hello-test
 (Manifests will be added as the project develops.)
 
 ```bash
-kubectl apply -f manifests/
+#### Deploy the application
+
+Build and load the api-service image into minikube:
+```bash
+cd services/api
+docker build -t url-shortener-api:0.1 .
+cd ../..
+minikube image load url-shortener-api:0.1
+```
+
+Apply the manifests:
+```bash
+kubectl apply -f manifests/api/
+```
+
+Verify:
+```bash
+kubectl get deployments
+kubectl get pods
+kubectl get services
+```
+
+All deployments should report ready replicas, and pods should show `Running` with status `1/1`.
+
+Access the service via port-forward:
+```bash
+kubectl port-forward service/api 8080:80
+```
+
+In another terminal:
+```bash
+curl http://localhost:8080/healthz
+curl -X POST http://localhost:8080/shorten \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+**Note:** The api-service runs 2 replicas with in-memory storage, so consecutive requests may hit different pods with inconsistent state. This is intentional and motivates the Redis backing store added in the next iteration.
 ```

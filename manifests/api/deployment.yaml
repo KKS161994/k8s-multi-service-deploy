@@ -1,6 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata:
+metadata:         #kubectl get deployment --show-labels api   app=api
   name: api
   labels:
     app: api
@@ -16,8 +16,13 @@ spec:
     spec:
       containers:
         - name: api
-          image: url-shortener-api:0.1
+          image: url-shortener-api:0.2
           imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
           ports:
             - containerPort: 8000
               name: http

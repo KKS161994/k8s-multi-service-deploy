@@ -2,8 +2,20 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import string 
 import random
+import redis
+import os
 
 app = FastAPI()
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+
+redis_client = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    decode_responses=True,
+    socket_connect_timeout=2,
+)
 
 # In-memory store. Will move to Redis once the cluster has a backing service.
 store: dict[str, str] = {}
@@ -19,7 +31,7 @@ def generate_code(length: int = 6) -> str:
 def shortenRequest(request: ShortUrlRequest)->dict[str, str]:
     code = generate_code()
 
-    while code in store:
+    while not redis_client.set(f"url:{code}", request.url, nx=True):
         code = generate_code()
     
     store[code] = request.url
@@ -27,17 +39,18 @@ def shortenRequest(request: ShortUrlRequest)->dict[str, str]:
 
 @app.get("/healthz",response_model=dict[str,str])
 def healthz():
-    return {"status":"OK"}
+    try:
+        redis_client.ping()
+        return {"status": "ok", "redis": "ok"}
+    except redis.RedisError:
+        raise HTTPException(status_code=503, detail="redis unavailable")
+
 
 
 @app.get("/r/{code}",response_model=dict[str,str])
 def resolve(code: str):
-    if code not in store:
+    url = redis_client.get(f"url:{code}")
+    if url is None:
         raise HTTPException(status_code=404, detail="code not found")
+    redis_client.incr(f"clicks:{code}")
     return {"code":code,"url":store[code]}
-
-
-
-
-
-

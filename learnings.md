@@ -28,4 +28,14 @@ Biggest concept of the day: **service discovery via DNS.** The api Deployment ju
 
 Next session (Monday, Day 4): probably ConfigMaps and Secrets — moving env var config out of the Deployment spec into proper config resources. Then ingress to expose api and stats on hostnames instead of port-forwards. Then observability (Prometheus) somewhere in Week 2-3.
 
+## 2026-05-16 (Saturday — marathon continued)
+
+Noticed both services have nearly identical /healthz implementations, both checking Redis connectivity. The duplication is real but the question is whether to extract.
+
+Conclusion: keep as-is for now. Two services with 5-line healthz blocks isn't worth a shared module. The correct architectural principle is "each service's healthz should reflect that service's specific dependencies" — and right now both services genuinely depend on Redis, so checking Redis in both is *correct*, not redundant.
+
+When to revisit: on the third service that needs a Redis health check, extract a shared `services/_common/health.py` module that lets each service declare its own dependency checks composably. The shared code is the implementation; the architectural intent (which dependencies matter for which service) stays in each service.
+
+Anti-pattern to avoid: shared health-check code that hides what each service actually depends on. Trivial /healthz that returns 200 OK regardless of dependency state is theater.
+
 Commit that too (single-line commit message is fine for learnings: Log Day 2 learnings).

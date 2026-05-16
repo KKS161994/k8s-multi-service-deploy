@@ -113,5 +113,17 @@ curl -X POST http://localhost:8080/shorten \
   -d '{"url": "https://example.com"}'
 ```
 
+## Architecture
+
+Three services running on minikube:
+
+- **api** (2 replicas): URL shortener. POST `/shorten` creates a code, GET `/{code}` resolves it and atomically increments a click counter.
+- **stats** (2 replicas): Read-only stats service. GET `/stats/{code}` returns click counts for a specific code, GET `/stats` lists all.
+- **redis** (1 replica): Shared state. Backed by a 1Gi PVC with appendonly persistence.
+
+Service-to-service communication uses Kubernetes' internal DNS — api and stats reach Redis via the hostname `redis` (which the cluster resolves to the redis Service's ClusterIP, which load-balances to the redis pod).
+
+All services use FastAPI on Python 3.12-slim, with health probes on `/healthz` that include Redis connectivity checks.
+
 **Note:** The api-service runs 2 replicas with in-memory storage, so consecutive requests may hit different pods with inconsistent state. This is intentional and motivates the Redis backing store added in the next iteration.
 ```

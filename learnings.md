@@ -38,4 +38,18 @@ When to revisit: on the third service that needs a Redis health check, extract a
 
 Anti-pattern to avoid: shared health-check code that hides what each service actually depends on. Trivial /healthz that returns 200 OK regardless of dependency state is theater.
 
+## 2026-05-16 (Saturday — closing reflection)
+
+Three days ago: zero manifests written. Today: eight manifests across three services, each one a deliberate choice. The single biggest realization is that **manifests are the architecture** — reading them tells you everything about how the service expects to run.
+
+Specific manifest patterns internalized today:
+- Probe choice reflects what the service can answer: HTTP /healthz for FastAPI, TCP socket + redis-cli ping for Redis
+- Resource requests/limits are non-negotiable in production manifests, even small services
+- Env-var injection via Deployment spec is the K8s way to configure services (Secrets and ConfigMaps will replace inline values in Week 2)
+- Service DNS via service name (REDIS_HOST=redis) is service discovery — no hardcoded IPs ever
+- PVC + volumeMount + volumes is the persistence triangle; getting these wrong is the most common stateful-app bug
+- Replicas count is a *correctness* decision for stateful services (Redis must be 1 without proper clustering), and a *scaling* decision for stateless ones (api and stats at 2 each)
+
+I went from "what is a manifest" to "I can write manifests for a multi-service application from scratch" in 3 working days. The marathon was the unlock — having all 4 hours together let me see how the pieces fit, not just what each piece is.
+
 Commit that too (single-line commit message is fine for learnings: Log Day 2 learnings).

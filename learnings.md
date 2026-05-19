@@ -76,7 +76,8 @@ ConfigMaps and Secrets — separating config from manifests.
 
 **Operational rhythm:**
 - Image bumps for both services (api 0.2→0.3, stats 0.1→0.2). Discipline of bumping tags when content changes is sticking.
-
+- Smoke test scope: when refactoring something that touches multiple services, the smoke test must hit ALL affected services. Today's Day 5 changes touched api AND stats (both needed REDIS_PASSWORD); the test must verify both, not just one. "It works for api" doesn't prove "the refactor is correct" if stats wasn't exercised.
+- Multi-service local testing pattern: use multiple terminals for parallel port-forwards. Three terminals for two-service tests (one per service, one for curl). For four+ services, this gets unwieldy — that's the moment ingress becomes valuable (single host, path-based routing, one terminal). Day 5 is a reminder that port-forward is dev-loop scaffolding, not the production access pattern.
 Monday May 18 unplanned rest after Saturday marathon — energy was low, took the day.
 
 Next: ingress (replace port-forward with proper hostname routing). Probably next Saturday marathon material since it has more conceptual surface (ingress controllers, host headers, minikube addon).

@@ -53,3 +53,30 @@ Specific manifest patterns internalized today:
 I went from "what is a manifest" to "I can write manifests for a multi-service application from scratch" in 3 working days. The marathon was the unlock — having all 4 hours together let me see how the pieces fit, not just what each piece is.
 
 Commit that too (single-line commit message is fine for learnings: Log Day 2 learnings).
+
+## 2026-05-19 (Day 5)
+
+ConfigMaps and Secrets — separating config from manifests.
+
+**ConfigMap:**
+- Non-sensitive config. `data:` at top level, NOT `spec:` (the K8s API rejects `spec` for ConfigMaps — saw the validation error firsthand).
+- Two consumption patterns: `envFrom:` injects all keys as env vars (used when names match); `env: valueFrom: configMapKeyRef:` for per-key injection with renaming.
+- Going from inline env vars in two Deployments to one shared ConfigMap means changing REDIS_HOST once, both services pick it up. Single source of truth.
+
+**Secret:**
+- Same shape as ConfigMap (`data:`/`stringData:`) but type `Opaque`. `stringData:` auto-encodes; `data:` requires base64. stringData is more readable.
+- Consumed via `secretRef:` in `envFrom:` or `secretKeyRef:` in `env:`. Identical pattern to ConfigMap.
+- Production note: committed YAML is NOT the right home for real secrets. Production uses Vault, sealed-secrets, cloud SM. For this project: gitignored real secret + committed `.example` template + README setup instructions.
+
+**The `envFrom` with multiple sources pattern:**
+- A single Deployment can pull env vars from a ConfigMap AND a Secret in the same `envFrom:` list. Clean composition.
+
+**Probe wiring after auth:**
+- Redis readiness probe needed updating to authenticate — `redis-cli -a "$REDIS_PASSWORD" ping`. Shell wrapper for env var expansion. Liveness via TCP socket needed no change (it just checks the port is open).
+
+**Operational rhythm:**
+- Image bumps for both services (api 0.2→0.3, stats 0.1→0.2). Discipline of bumping tags when content changes is sticking.
+
+Monday May 18 unplanned rest after Saturday marathon — energy was low, took the day.
+
+Next: ingress (replace port-forward with proper hostname routing). Probably next Saturday marathon material since it has more conceptual surface (ingress controllers, host headers, minikube addon).

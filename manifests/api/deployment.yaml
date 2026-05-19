@@ -18,11 +18,9 @@ spec:
         - name: api
           image: url-shortener-api:0.2
           imagePullPolicy: IfNotPresent
-          env:
-            - name: REDIS_HOST
-              value: "redis"
-            - name: REDIS_PORT
-              value: "6379"
+          envFrom:
+            - configMapRef:
+                name: redis-config
           ports:
             - containerPort: 8000
               name: http

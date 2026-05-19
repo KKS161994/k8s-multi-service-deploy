@@ -1,4 +1,4 @@
-## How to run locally
+
 
 ### Prerequisites
 - Docker (or another container runtime)
@@ -127,3 +127,28 @@ All services use FastAPI on Python 3.12-slim, with health probes on `/healthz` t
 
 **Note:** The api-service runs 2 replicas with in-memory storage, so consecutive requests may hit different pods with inconsistent state. This is intentional and motivates the Redis backing store added in the next iteration.
 ```
+
+### Setup secrets
+
+This project uses a Kubernetes Secret to store the Redis password. The real Secret manifest (`manifests/config/secret.yaml`) is gitignored — it must be created locally before deploying. A committed template (`manifests/config/secret.yaml.example`) shows the required structure.
+
+To set up:
+
+1. Copy the template:
+   \`\`\`bash
+   cp manifests/config/secret.yaml.example manifests/config/secret.yaml
+   \`\`\`
+
+2. Generate a password:
+   \`\`\`bash
+   openssl rand -base64 24
+   \`\`\`
+
+3. Open `manifests/config/secret.yaml` and replace `<your-password-here>` with the generated password.
+
+4. Apply when deploying:
+   \`\`\`bash
+   kubectl apply -f manifests/config/
+   \`\`\`
+
+**Note on production:** In production, secrets should never be stored as committed YAML files — even with the gitignore protection. Real systems use external secret managers such as HashiCorp Vault, AWS Secrets Manager, or sealed-secrets. The pattern here is acceptable for local learning but not for shared environments.

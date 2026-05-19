@@ -16,11 +16,13 @@ spec:
     spec:
       containers:
         - name: api
-          image: url-shortener-api:0.2
+          image: url-shortener-api:0.3
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: redis-config
+            - secretRef:
+                name: redis-secret
           ports:
             - containerPort: 8000
               name: http

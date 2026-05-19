@@ -16,7 +16,12 @@ spec:
     spec:
       containers:
         - name: stats
-          image: url-shortener-stats:0.1
+          image: url-shortener-stats:0.2
+          envFrom:
+            - configMapRef:
+                name: redis-config
+            - secretRef:
+                name: redis-secret
           imagePullPolicy: IfNotPresent
           env:
             - name: REDIS_HOST

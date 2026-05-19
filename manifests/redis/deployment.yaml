@@ -24,6 +24,14 @@ spec:
             - "redis-server"
             - "--appendonly"
             - "yes"
+            - "--requirepass"
+            - "$(REDIS_PASSWORD)"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
           volumeMounts:
             - name: data
               mountPath: /data
@@ -34,9 +42,12 @@ spec:
             periodSeconds: 10
           readinessProbe:
             exec:
-              command: ["redis-cli", "ping"]
-            initialDelaySeconds: 2
-            periodSeconds: 5
+              command:
+                - "sh"
+                - "-c"
+                - 'redis-cli -a "$REDIS_PASSWORD" ping | grep PONG'
+            initialDelaySeconds: 5   # Wait 5 seconds after startup before checking
+            periodSeconds: 10        # Check every 10 seconds
           resources:
             requests:
               cpu: "50m"

@@ -1,4 +1,18 @@
+## Project status
 
+**Status:** Paused as of May 22, 2026.
+
+This project covers Kubernetes patterns through Week 1 of a planned 15-week
+arc — multi-service deployment, persistent storage with PVCs, Service
+discovery via DNS, ConfigMaps and Secrets, probes and resource governance.
+
+Pausing to focus on a separate project (`order-processing-api`) ahead of
+an interview loop. Planned to resume mid-July 2026 with: ingress, observability
+(Prometheus), HorizontalPodAutoscaler, separate /healthz and /ready endpoints,
+and a shared `_common/health.py` module once the third service that depends
+on Redis lands.
+
+See `learnings.md` for a chronological record of the patterns covered.
 
 ### Prerequisites
 - Docker (or another container runtime)
@@ -152,3 +166,4 @@ To set up:
    \`\`\`
 
 **Note on production:** In production, secrets should never be stored as committed YAML files — even with the gitignore protection. Real systems use external secret managers such as HashiCorp Vault, AWS Secrets Manager, or sealed-secrets. The pattern here is acceptable for local learning but not for shared environments.
+

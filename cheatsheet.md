@@ -3,6 +3,12 @@
 A working reference for commands used in this project, organized by tool. Updated as the project evolves.
 
 ---
+## Starting the day
+
+- **Daily startup (K8s work):** open Docker → wait for whale stable → minikube start → kubectl get pods
+- **Daily startup (Docker-only work):** open Docker → wait for whale stable
+- **Daily shutdown:** minikube stop (if started) → quit Docker Desktop via menu bar or `osascript -e 'quit app "Docker"'`
+- **Critical ordering:** minikube stop BEFORE quitting Docker. Reverse order leaves minikube in "unknown state."
 
 ## Quick index — common tasks
 
